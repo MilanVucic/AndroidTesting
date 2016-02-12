@@ -1,17 +1,17 @@
 {
   "project_info": {
-    "project_id": "studeninfo-4c459",
-    "project_number": "618176574384",
-    "name": "StudenInfo"
+    "project_id": "default-demo-app-71814",
+    "project_number": "461171941868",
+    "name": "Default Demo App"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:618176574384:android:4dc7adfb72fbe66a",
-        "client_id": "android:com.example.vucic.testproject",
+        "mobilesdk_app_id": "1:461171941868:android:f36173e948059ccb",
+        "client_id": "android:gcm.play.android.samples.com.gcmquickstart",
         "client_type": 1,
         "android_client_info": {
-          "package_name": "com.example.vucic.testproject"
+          "package_name": "gcm.play.android.samples.com.gcmquickstart"
         }
       },
       "oauth_client": [],

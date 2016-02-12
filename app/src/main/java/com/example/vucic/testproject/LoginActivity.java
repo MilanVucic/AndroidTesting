@@ -4,9 +4,11 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -32,6 +34,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -62,6 +65,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private boolean auth = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,39 +154,50 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
-
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
-        final HTTPClient client = new HTTPClient();
-        final String json = "{\n" +
-                "  \"grant_type\": \"password\",\n" +
-                "  \"client_id\": \"1\",\n" +
-                "  \"client_secret\": \"secret\",\n" +
-                "  \"username\": \"raf@raf.edu.rs\",\n" +
-                "  \"password\": \"raffyadmin\"\n" +
-                "}";
-        Intent intent = new Intent(this, RegistrationIntentService.class);
-        startService(intent);
-        Thread thread = new Thread(new Runnable() {
+        final String email = mEmailView.getText().toString();
+        final String password = mPasswordView.getText().toString();
+
+        final ApiRequests apiRequests = new ApiRequests();
+        final SharedPreferences preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        Thread accessTokenThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    String response = client.post("http://api.studentinfo.rs/oauth/access_token", json);
-                    JSONObject json = new JSONObject(response);
-                    JSONObject success = json.getJSONObject("success");
-                    JSONObject data = success.getJSONObject("data");
-                    JSONObject oauth = data.getJSONObject("oauth");
-
-                    String accessToken = oauth.getString("access_token");
-
+                    if (apiRequests.getAccessToken(email,password,preferences)) {
+                        auth = true;
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
 
-        thread.start();
+        accessTokenThread.start();
+
+        Thread authThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    apiRequests.getUser(email, password, preferences);
+                    latch.countDown();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        authThread.start();
+
+        try {
+            latch.await();
+            Intent intent = new Intent(this, RegistrationIntentService.class);
+            startService(intent);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         boolean cancel = false;
         View focusView = null;

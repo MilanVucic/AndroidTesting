@@ -13,5 +13,5 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
-    <string name="gcm_defaultSenderId">0x7f060034</string>
+    <!--<string name="gcm_defaultSenderId">0x7f060034</string>-->
 </resources>

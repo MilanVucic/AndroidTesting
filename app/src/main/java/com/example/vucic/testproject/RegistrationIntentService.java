@@ -17,7 +17,9 @@
 package com.example.vucic.testproject;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -32,10 +34,16 @@ public class RegistrationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         try {
-            InstanceID instanceID = InstanceID.getInstance(this);
-            String token = instanceID.getToken("461171941868",
-                    GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-            Log.i("Registration Token: ", token);
+            SharedPreferences preferences = this.getSharedPreferences("Stuff", Context.MODE_PRIVATE);
+            int userId = preferences.getInt("userId", 0);
+            if (userId != 0) {
+                InstanceID instanceID = InstanceID.getInstance(this);
+                String token = instanceID.getToken("461171941868",
+                        GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+                Log.i("Registration Token: ", token);
+                ApiRequests apiRequests = new ApiRequests();
+                apiRequests.postDeviceToken(token, preferences);
+            }
 
         } catch (Exception e) {
             Log.d("Fail", "Failed to complete token refresh", e);
