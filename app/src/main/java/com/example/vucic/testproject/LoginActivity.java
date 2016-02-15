@@ -49,13 +49,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final int REQUEST_READ_CONTACTS = 0;
 
     /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
-    /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
@@ -161,44 +154,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         final ApiRequests apiRequests = new ApiRequests();
         final SharedPreferences preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
         final CountDownLatch latch = new CountDownLatch(1);
-
-        Thread accessTokenThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (apiRequests.getAccessToken(email,password,preferences)) {
-                        auth = true;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        accessTokenThread.start();
-
-        Thread authThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    apiRequests.getUser(email, password, preferences);
-                    latch.countDown();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        authThread.start();
-
-        try {
-            latch.await();
-            Intent intent = new Intent(this, RegistrationIntentService.class);
-            startService(intent);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         boolean cancel = false;
         View focusView = null;
 
@@ -210,36 +165,76 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
 
         // Check for a valid email address.
-//        if (TextUtils.isEmpty(email)) {
-//            mEmailView.setError(getString(R.string.error_field_required));
-//            focusView = mEmailView;
-//            cancel = true;
-//        } else if (!isEmailValid(email)) {
-//            mEmailView.setError(getString(R.string.error_invalid_email));
-//            focusView = mEmailView;
-//            cancel = true;
-//        }
-//
+        if (TextUtils.isEmpty(email)) {
+            mEmailView.setError(getString(R.string.error_field_required));
+            focusView = mEmailView;
+            cancel = true;
+        } else if (!isEmailValid(email)) {
+            mEmailView.setError(getString(R.string.error_invalid_email));
+            focusView = mEmailView;
+            cancel = true;
+        }
+
 //        if (cancel) {
 //            // There was an error; don't attempt login and focus the first
 //            // form field with an error.
 ////            focusView.requestFocus();
 //        } else {
-        // Show a progress spinner, and kick off a background task to
-        // perform the user login attempt.
-        showProgress(true);
-//            mAuthTask = new UserLoginTask(email, password);
-//            mAuthTask.execute((Void) null);
+//            // Show a progress spinner, and kick off a background task to
+//            // perform the user login attempt.
+//            showProgress(true);
+////            mAuthTask = new UserLoginTask(email, password);
+////            mAuthTask.execute((Void) null);
 //        }
+
+        if (!cancel) {
+            showProgress(true);
+
+            Thread accessTokenThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (apiRequests.getAccessToken(email, password, preferences)) {
+                            auth = true;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            accessTokenThread.start();
+
+            Thread authThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        apiRequests.getUser(email, password, preferences);
+                        latch.countDown();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            authThread.start();
+
+            //Sinhronizacija da Intent pocne tek kad su se obe niti zavrsile
+            try {
+                latch.await();
+                Intent intent = new Intent(this, RegistrationIntentService.class);
+                startService(intent);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
         return email.contains("@");
     }
 
     private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
         return password.length() > 4;
     }
 
@@ -358,13 +353,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
+//            for (String credential : DUMMY_CREDENTIALS) {
+//                String[] pieces = credential.split(":");
+//                if (pieces[0].equals(mEmail)) {
+//                    // Account exists, return true if the password matches.
+//                    return pieces[1].equals(mPassword);
+//                }
+//            }
 
             // TODO: register the new account here.
             return true;

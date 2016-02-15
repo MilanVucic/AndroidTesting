@@ -15,48 +15,47 @@ public class ApiRequests {
     static  HTTPClient client = new HTTPClient();
 
     public boolean getAccessToken(String username, String password, SharedPreferences preferences) throws IOException, JSONException {
-        Log.i("neeee", "da");
         final String payload = "{\"grant_type\": \"password\",\"client_id\": \"1\", \"client_secret\": \"secret\", \"username\": \""+username+"\", \"password\": \""+password+"\"}";
         String response = client.post("http://api.studentinfo.rs/oauth/access_token", payload);
-        Log.i("rispons", response);
+        if (!response.contains("\"success\"")) {
+            Log.i("neuspeh", "dayum");
+            return false;
+        }
         JSONObject json = new JSONObject(response);
         Log.i("accessToken", json.toString());
-        if (json.has("success")) {
-            JSONObject success = json.getJSONObject("success");
-            JSONObject data = success.getJSONObject("data");
-            JSONObject oauth = data.getJSONObject("oauth");
 
-            String accessToken = oauth.getString("access_token");
+        JSONObject success = json.getJSONObject("success");
+        JSONObject data = success.getJSONObject("data");
+        JSONObject oauth = data.getJSONObject("oauth");
 
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putString("accessToken", accessToken);
-            editor.apply();
+        String accessToken = oauth.getString("access_token");
 
-            return true;
-        }
-        return false;
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("accessToken", accessToken);
+        editor.apply();
+
+        return true;
     }
 
     public boolean getUser(String email, String password, SharedPreferences preferences) throws IOException, JSONException {
-        Log.i("daaaaa", "da");
         final String payload = "{\"email\": \""+email+"\", \"password\": \""+password+"\"}";
         String response = client.post("http://api.studentinfo.rs/auth", payload);
+        if (!response.contains("success")) {
+            return false;
+        }
         JSONObject json = new JSONObject(response);
         Log.i("accessToken", json.toString());
-        if (json.has("success")) {
-            JSONObject success = json.getJSONObject("success");
-            JSONObject data = success.getJSONObject("data");
-            JSONObject user = data.getJSONObject("user");
+        JSONObject success = json.getJSONObject("success");
+        JSONObject data = success.getJSONObject("data");
+        JSONObject user = data.getJSONObject("user");
 
-            int userId = user.getInt("id");
+        int userId = user.getInt("id");
 
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putInt("userId", userId);
-            editor.apply();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("userId", userId);
+        editor.apply();
 
-            return true;
-        }
-        return false;
+        return true;
     }
 
     public boolean postDeviceToken(String token, SharedPreferences preferences) throws IOException, JSONException {
