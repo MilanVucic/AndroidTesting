@@ -59,11 +59,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
     private boolean auth = false;
+    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
+        if (!preferences.getString("accessToken", "").equals("")){
+            // bice jos testiranja da li je token validan cim napravim proveru na backu..vrvt dana ili sutra
+            Intent main = new Intent(this, MainActivity.class);
+            startActivity(main);
+        }
+
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -152,7 +161,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         final String password = mPasswordView.getText().toString();
 
         final ApiRequests apiRequests = new ApiRequests();
-        final SharedPreferences preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
         final CountDownLatch latch = new CountDownLatch(1);
         boolean cancel = false;
         View focusView = null;

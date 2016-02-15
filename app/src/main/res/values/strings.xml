@@ -13,5 +13,22 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="url">http://api.studentinfo.rs</string>
+
+    <string name="_09h">09h</string>
+    <string name="_10h">10h</string>
+    <string name="_11h">11h</string>
+    <string name="_12h">12h</string>
+    <string name="_13h">13h</string>
+    <string name="_14h">14h</string>
+    <string name="_15h">15h</string>
+    <string name="_16h">16h</string>
+    <string name="_17h">17h</string>
+    <string name="_18h">18h</string>
+    <string name="_19h">19h</string>
+    <string name="_20h">20h</string>
+
     <!--<string name="gcm_defaultSenderId">0x7f060034</string>-->
 </resources>

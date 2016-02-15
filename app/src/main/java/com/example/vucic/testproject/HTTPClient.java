@@ -24,4 +24,13 @@ public class HTTPClient {
         Response response = client.newCall(request).execute();
         return response.body().string();
     }
+
+    public String get(String url) throws IOException {
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        Response response = client.newCall(request).execute();
+        return response.body().string();
+    }
 }
