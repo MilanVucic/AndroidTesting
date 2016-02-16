@@ -14,8 +14,7 @@
         completions."
     </string>
     <string name="title_activity_main">MainActivity</string>
-
-    <string name="url">http://api.studentinfo.rs</string>
+    <string name="logout">logout</string>
 
     <string name="_09h">09h</string>
     <string name="_10h">10h</string>

@@ -34,19 +34,18 @@ public class RegistrationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         try {
-            SharedPreferences preferences = this.getSharedPreferences("Stuff", Context.MODE_PRIVATE);
+            SharedPreferences preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
             int userId = preferences.getInt("userId", 0);
             if (userId != 0) {
                 InstanceID instanceID = InstanceID.getInstance(this);
-                String token = instanceID.getToken("461171941868",
+                String deviceToken = instanceID.getToken("461171941868",
                         GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-                Log.i("Registration Token: ", token);
+                Log.i("Registration Token: ", deviceToken);
                 ApiRequests apiRequests = new ApiRequests();
-                apiRequests.postDeviceToken(token, preferences);
+                apiRequests.postDeviceToken(deviceToken, preferences);
             }
-
         } catch (Exception e) {
-            Log.d("Fail", "Failed to complete token refresh", e);
-           }
+            e.printStackTrace();
+        }
     }
 }

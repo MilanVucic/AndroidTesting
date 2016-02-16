@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -67,11 +68,34 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         setContentView(R.layout.activity_login);
 
         preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
-        if (!preferences.getString("accessToken", "").equals("")){
-            // bice jos testiranja da li je token validan cim napravim proveru na backu..vrvt dana ili sutra
-            Intent main = new Intent(this, MainActivity.class);
-            startActivity(main);
+        final String accessToken = preferences.getString("accessToken", "");
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        if (!accessToken.equals("")){
+            final ApiRequests apiRequests = new ApiRequests();
+            Thread verifyTokenThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (apiRequests.verifyAccessToken(accessToken)) {
+                            latch.countDown();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            verifyTokenThread.start();
+
+            try {
+                latch.await();
+                Intent main = new Intent(this, MainActivity.class);
+                startActivity(main);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+
 
 
         // Set up the login form.
@@ -161,7 +185,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         final String password = mPasswordView.getText().toString();
 
         final ApiRequests apiRequests = new ApiRequests();
-        final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch latch = new CountDownLatch(2);
         boolean cancel = false;
         View focusView = null;
 
@@ -197,7 +221,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         if (!cancel) {
             showProgress(true);
-
             Thread accessTokenThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -205,6 +228,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         if (apiRequests.getAccessToken(email, password, preferences)) {
                             auth = true;
                         }
+                        latch.countDown();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -230,11 +254,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             //Sinhronizacija da Intent pocne tek kad su se obe niti zavrsile
             try {
                 latch.await();
-                Intent intent = new Intent(this, RegistrationIntentService.class);
-                startService(intent);
+                if (auth) {
+                    Intent intent = new Intent(this, RegistrationIntentService.class);
+                    startService(intent);
+                    finish();
+                    Intent main = new Intent(this, MainActivity.class);
+                    startActivity(main);
+                }
+                else {
+                    cancel = true;
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            showProgress(false);
         }
     }
 

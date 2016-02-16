@@ -1,6 +1,7 @@
 package com.example.vucic.testproject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -23,7 +24,7 @@ import java.util.GregorianCalendar;
 public class MainActivity extends AppCompatActivity {
 
     private SharedPreferences preferences;
-
+    private Button logout;
     public int day;
 
     @Override
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        logout = (Button) findViewById(R.id.logout);
         GregorianCalendar gc = new GregorianCalendar();
         day = gc.get(gc.DAY_OF_WEEK);
         Log.i("dateNot", String.valueOf(day));
@@ -58,6 +60,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         groupLectures.start();
+
+        logout.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                finish();
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putString("accessToken", "");
+                editor.putString("slug", "");
+                editor.putInt("userId", 0);
+                editor.apply();
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void show(JSONObject lecture){
@@ -98,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     for (int i = startHour - 9 + 1; i < startHour - 9 + lengthHour; i++) {
-                        ((ViewManager) views.get(i).getParent()).removeView(views.get(i));
+                        ((ViewManager)views.get(i).getParent()).removeView(views.get(i));
                     }
                 }
             });

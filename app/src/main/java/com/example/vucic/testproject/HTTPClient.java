@@ -28,6 +28,17 @@ public class HTTPClient {
     public String get(String url) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
+                .get()
+                .build();
+
+        Response response = client.newCall(request).execute();
+        return response.body().string();
+    }
+
+    public String delete(String url) throws IOException {
+        Request request = new Request.Builder()
+                .url(url)
+                .delete()
                 .build();
 
         Response response = client.newCall(request).execute();

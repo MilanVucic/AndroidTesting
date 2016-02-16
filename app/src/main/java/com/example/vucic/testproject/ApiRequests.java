@@ -14,14 +14,13 @@ import java.io.IOException;
 public class ApiRequests {
 
     static  HTTPClient client = new HTTPClient();
+    static String url = "http://api.studentinfo.rs";
 
     public boolean getAccessToken(String username, String password, SharedPreferences preferences) {
         final String payload = "{\"grant_type\": \"password\",\"client_id\": \"1\", \"client_secret\": \"secret\", \"username\": \""+username+"\", \"password\": \""+password+"\"}";
-        String response = null;
         try {
-            response = client.post("@string/url"+"/oauth/access_token", payload);
+            String response = client.post(url+"/oauth/access_token", payload);
             if (!response.contains("\"success\"")) {
-                Log.i("neuspeh", "dayum");
                 return false;
             }
             JSONObject json = new JSONObject(response);
@@ -47,7 +46,7 @@ public class ApiRequests {
         final String payload = "{\"email\": \""+email+"\", \"password\": \""+password+"\"}";
         String response = null;
         try {
-            response = client.post("@string/url"+"/auth", payload);
+            response = client.post(url+"/auth", payload);
             if (!response.contains("success")) {
                 return false;
             }
@@ -57,8 +56,10 @@ public class ApiRequests {
             JSONObject user = data.getJSONObject("user");
 
             int userId = user.getInt("id");
+            String slug = user.getJSONObject("faculty").getString("slug");
 
             SharedPreferences.Editor editor = preferences.edit();
+            editor.putString("slug", slug);
             editor.putInt("userId", userId);
             editor.apply();
 
@@ -71,15 +72,13 @@ public class ApiRequests {
     }
 
     public boolean postDeviceToken(String token, SharedPreferences preferences) {
-        int userId = preferences.getInt("userId", 0);
-        if (userId != 0) {
-            final String payload = "{\"token\": \"" + token + "\", \"userId\": \"" + userId + "\"}";
-            String response = null;
+        String accessToken = preferences.getString("accessToken", "");
+        if (!accessToken.equals("")) {
+            final String payload = "{\"token\": \"" + token + "\", \"access_token\": \"" + accessToken + "\"}";
             try {
-                response = client.post("@string/url"+"/deviceToken", payload);
+                String response = client.post(url + "/deviceToken", payload);
                 JSONObject json = new JSONObject(response);
                 if (json.has("success")) {
-
                     return true;
                 }
             } catch (Exception e) {
@@ -89,10 +88,38 @@ public class ApiRequests {
         return false;
     }
 
+    public boolean verifyAccessToken(String accessToken){
+        try {
+            String response = client.get(url+"/verifyAccessToken?access_token="+accessToken);
+            JSONObject json = new JSONObject(response);
+            if (json.has("success")){
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean logout(String accessToken){
+        try {
+            String response = client.delete(url+"/auth?access_token=" + accessToken);
+            JSONObject json = new JSONObject(response);
+            if (json.has("success")){
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public JSONArray getLecturesForGroup(int groupId, SharedPreferences preferences){
         String accessToken = preferences.getString("accessToken", "");
+        String slug = preferences.getString("slug", "");
+        Log.i("slug", slug);
         try {
-            String response = client.get("http://api.studentinfo.rs"+"/raf/group/"+groupId+"?access_token="+accessToken);
+            String response = client.get(url+"/"+slug+"/group/"+groupId+"?access_token="+accessToken);
             JSONObject json = new JSONObject(response);
 
             JSONObject success = json.getJSONObject("success");
