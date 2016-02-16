@@ -25,13 +25,13 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,15 +71,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         final String accessToken = preferences.getString("accessToken", "");
         final CountDownLatch latch = new CountDownLatch(1);
 
-        if (!accessToken.equals("")){
+        if (!accessToken.equals("")) {
             final ApiRequests apiRequests = new ApiRequests();
             Thread verifyTokenThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         if (apiRequests.verifyAccessToken(accessToken)) {
-                            latch.countDown();
+                            auth = true;
                         }
+                        latch.countDown();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -89,13 +90,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             try {
                 latch.await();
-                Intent main = new Intent(this, MainActivity.class);
-                startActivity(main);
+                if (auth) {
+                    Intent main = new Intent(this, MainActivity.class);
+                    startActivity(main);
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-
 
 
         // Set up the login form.
@@ -177,6 +179,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private void attemptLogin() {
 
+        // Check if no view has focus:
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
@@ -184,8 +193,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         final String email = mEmailView.getText().toString();
         final String password = mPasswordView.getText().toString();
 
-        final ApiRequests apiRequests = new ApiRequests();
-        final CountDownLatch latch = new CountDownLatch(2);
         boolean cancel = false;
         View focusView = null;
 
@@ -207,67 +214,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             cancel = true;
         }
 
-//        if (cancel) {
-//            // There was an error; don't attempt login and focus the first
-//            // form field with an error.
-////            focusView.requestFocus();
-//        } else {
-//            // Show a progress spinner, and kick off a background task to
-//            // perform the user login attempt.
-//            showProgress(true);
-////            mAuthTask = new UserLoginTask(email, password);
-////            mAuthTask.execute((Void) null);
-//        }
-
-        if (!cancel) {
+        if (cancel) {
+            //There was an error; don't attempt login and focus the first
+            //form field with an error.
+            focusView.requestFocus();
+        } else {
+            // Show a progress spinner, and kick off a background task to
+            // perform the user login attempt.
             showProgress(true);
-            Thread accessTokenThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (apiRequests.getAccessToken(email, password, preferences)) {
-                            auth = true;
-                        }
-                        latch.countDown();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            accessTokenThread.start();
-
-            Thread authThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        apiRequests.getUser(email, password, preferences);
-                        latch.countDown();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            authThread.start();
-
-            //Sinhronizacija da Intent pocne tek kad su se obe niti zavrsile
-            try {
-                latch.await();
-                if (auth) {
-                    Intent intent = new Intent(this, RegistrationIntentService.class);
-                    startService(intent);
-                    finish();
-                    Intent main = new Intent(this, MainActivity.class);
-                    startActivity(main);
-                }
-                else {
-                    cancel = true;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            showProgress(false);
+            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask.execute((Void) null);
         }
     }
 
@@ -298,7 +254,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
-
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mProgressView.animate().setDuration(shortAnimTime).alpha(
                     show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
@@ -377,6 +332,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         private final String mEmail;
         private final String mPassword;
+        final ApiRequests apiRequests = new ApiRequests();
+        final CountDownLatch latch = new CountDownLatch(2);
 
         UserLoginTask(String email, String password) {
             mEmail = email;
@@ -385,15 +342,51 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
+            Thread accessTokenThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (apiRequests.getAccessToken(mEmail, mPassword, preferences)) {
+                            auth = true;
+                        }
+                        latch.countDown();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            accessTokenThread.start();
+
+            Thread authThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        apiRequests.getUser(mEmail, mPassword, preferences);
+                        latch.countDown();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            authThread.start();
 
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
+                latch.await();
+                if (auth) {
+                    return true;
+                }
             } catch (InterruptedException e) {
-                return false;
+                e.printStackTrace();
             }
 
+//            try {
+//                // Simulate network access.
+//                Thread.sleep(2000);
+//            } catch (InterruptedException e) {
+//                return false;
+//            }
 //            for (String credential : DUMMY_CREDENTIALS) {
 //                String[] pieces = credential.split(":");
 //                if (pieces[0].equals(mEmail)) {
@@ -402,8 +395,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 //                }
 //            }
 
-            // TODO: register the new account here.
-            return true;
+            return false;
         }
 
         @Override
@@ -412,7 +404,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
+                Intent intent = new Intent(LoginActivity.this, RegistrationIntentService.class);
+                startService(intent);
                 finish();
+                Intent main = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(main);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();

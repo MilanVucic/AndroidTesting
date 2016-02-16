@@ -40,7 +40,11 @@ public class RegistrationIntentService extends IntentService {
                 InstanceID instanceID = InstanceID.getInstance(this);
                 String deviceToken = instanceID.getToken("461171941868",
                         GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-                Log.i("Registration Token: ", deviceToken);
+
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putString("deviceToken", deviceToken);
+                editor.apply();
+
                 ApiRequests apiRequests = new ApiRequests();
                 apiRequests.postDeviceToken(deviceToken, preferences);
             }
