@@ -20,7 +20,6 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,7 +30,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,9 +75,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 @Override
                 public void run() {
                     try {
-                        if (apiRequests.verifyAccessToken(accessToken)) {
-                            auth = true;
-                        }
+                        auth = apiRequests.verifyAccessToken(accessToken);
                         latch.countDown();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -182,7 +178,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Check if no view has focus:
         View view = this.getCurrentFocus();
         if (view != null) {
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
 
@@ -333,7 +329,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private final String mEmail;
         private final String mPassword;
         final ApiRequests apiRequests = new ApiRequests();
-        final CountDownLatch latch = new CountDownLatch(2);
 
         UserLoginTask(String email, String password) {
             mEmail = email;
@@ -342,60 +337,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            Thread accessTokenThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (apiRequests.getAccessToken(mEmail, mPassword, preferences)) {
-                            auth = true;
-                        }
-                        latch.countDown();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            accessTokenThread.start();
-
-            Thread authThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        apiRequests.getUser(mEmail, mPassword, preferences);
-                        latch.countDown();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            authThread.start();
-
-            try {
-                latch.await();
-                if (auth) {
-                    return true;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (apiRequests.getAccessToken(mEmail, mPassword, preferences)) {
+                auth = true;
+                apiRequests.getUser(mEmail, mPassword, preferences);
             }
-
-//            try {
-//                // Simulate network access.
-//                Thread.sleep(2000);
-//            } catch (InterruptedException e) {
-//                return false;
-//            }
-//            for (String credential : DUMMY_CREDENTIALS) {
-//                String[] pieces = credential.split(":");
-//                if (pieces[0].equals(mEmail)) {
-//                    // Account exists, return true if the password matches.
-//                    return pieces[1].equals(mPassword);
-//                }
-//            }
-
-            return false;
+            return auth;
         }
 
         @Override

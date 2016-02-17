@@ -25,7 +25,11 @@ import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
+import java.io.IOException;
+
 public class RegistrationIntentService extends IntentService {
+
+    private static final String AUTHORIZED_ENTITY = "461171941868";
 
     public RegistrationIntentService() {
         super("RegIntentService");
@@ -38,7 +42,7 @@ public class RegistrationIntentService extends IntentService {
             int userId = preferences.getInt("userId", 0);
             if (userId != 0) {
                 InstanceID instanceID = InstanceID.getInstance(this);
-                String deviceToken = instanceID.getToken("461171941868",
+                String deviceToken = instanceID.getToken(AUTHORIZED_ENTITY,
                         GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
                 SharedPreferences.Editor editor = preferences.edit();
@@ -48,7 +52,7 @@ public class RegistrationIntentService extends IntentService {
                 ApiRequests apiRequests = new ApiRequests();
                 apiRequests.postDeviceToken(deviceToken, preferences);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
