@@ -61,6 +61,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mLoginFormView;
     private boolean auth = false;
     private SharedPreferences preferences;
+    String email, password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,8 +90,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             try {
                 latch.await();
                 if (auth) {
-                    Intent main = new Intent(this, MainActivity.class);
-                    startActivity(main);
+                    Intent navigationDrawer = new Intent(this, NavigationDrawerActivity.class);
+                    startActivity(navigationDrawer);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -184,12 +185,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
 
+
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
         // Store values at the time of the login attempt.
-        final String email = mEmailView.getText().toString();
-        final String password = mPasswordView.getText().toString();
+        email = mEmailView.getText().toString();
+        password = mPasswordView.getText().toString();
+
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("email", email);
+        editor.apply();
 
         boolean cancel = false;
         View focusView = null;
@@ -356,8 +362,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 Intent intent = new Intent(LoginActivity.this, RegistrationIntentService.class);
                 startService(intent);
                 finish();
-                Intent main = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(main);
+                Intent navigationDrawer = new Intent(LoginActivity.this, NavigationDrawerActivity.class);
+                navigationDrawer.putExtra("email", email);
+                startActivity(navigationDrawer);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
