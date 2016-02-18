@@ -2,7 +2,10 @@ package com.example.vucic.testproject;
 
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -19,7 +22,7 @@ public class HTTPClient {
 
     OkHttpClient client = new OkHttpClient();
 
-    public String post(String url, String json) throws IOException {
+    public BufferedReader post(String url, String json) throws IOException {
         Log.i(TAG, "Sending a post request with body:\n" + json + "\n to URL: " + url);
 
         RequestBody body = RequestBody.create(JSON, json);
@@ -28,14 +31,14 @@ public class HTTPClient {
                 .post(body)
                 .build();
         Response response = client.newCall(request).execute();
-        String responseString = response.body().toString();
 
-        Log.i(TAG, "Received response: " + responseString);
+        InputStream in = response.body().byteStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-        return responseString;
+        return reader;
     }
 
-    public String put(String url, String json) throws IOException {
+    public BufferedReader put(String url, String json) throws IOException {
         Log.i(TAG, "Sending a put request with body:\n" + json + "\n to URL: " + url);
 
         RequestBody body = RequestBody.create(JSON, json);
@@ -45,14 +48,13 @@ public class HTTPClient {
                 .build();
 
         Response response = client.newCall(request).execute();
-        String responseString = response.body().toString();
+        InputStream in = response.body().byteStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-        Log.i(TAG, "Received response: " + responseString);
-
-        return responseString;
+        return reader;
     }
 
-    public String get(String url) throws IOException {
+    public BufferedReader get(String url) throws IOException {
         Log.i(TAG, "Sending a get request to URL: " + url);
 
         Request request = new Request.Builder()
@@ -61,14 +63,13 @@ public class HTTPClient {
                 .build();
 
         Response response = client.newCall(request).execute();
-        String responseString = response.body().toString();
+        InputStream in = response.body().byteStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-        Log.i(TAG, "Received response: " + responseString);
-
-        return responseString;
+        return reader;
     }
 
-    public String delete(String url) throws IOException {
+    public BufferedReader delete(String url) throws IOException {
         Log.i(TAG, "Sending a delete request to URL: " + url);
 
         Request request = new Request.Builder()
@@ -77,10 +78,9 @@ public class HTTPClient {
                 .build();
 
         Response response = client.newCall(request).execute();
-        String responseString = response.body().toString();
+        InputStream in = response.body().byteStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-        Log.i(TAG, "Received response: " + responseString);
-
-        return responseString;
+        return reader;
     }
 }

@@ -2,21 +2,26 @@ package com.example.vucic.testproject;
 
 
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.json.JSONArray;
-
 import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
 
 
 public class ApiRequests {
 
     static HTTPClient client = new HTTPClient();
     static String url = "http://api.studentinfo.rs";
+    private static final String TAG = "ApiRequest";
 
     public boolean getAccessToken(String username, String password, SharedPreferences preferences) {
         final String payload = "{\"grant_type\": \"password\",\"client_id\": \"1\", \"client_secret\": \"secret\", \"username\": \"" + username + "\", \"password\": \"" + password + "\"}";
         try {
-            String response = client.post(url + "/oauth/access_token", payload);
+            BufferedReader reader = client.post(url + "/oauth/access_token", payload);
+            String response = readResponse(reader);
             if (!response.contains("\"success\"")) {
                 return false;
             }
@@ -42,7 +47,8 @@ public class ApiRequests {
     public boolean getUser(String email, String password, SharedPreferences preferences) {
         final String payload = "{\"email\": \"" + email + "\", \"password\": \"" + password + "\"}";
         try {
-            String response = client.post(url + "/auth", payload);
+            BufferedReader reader = client.post(url + "/auth", payload);
+            String response = readResponse(reader);
             if (!response.contains("success")) {
                 return false;
             }
@@ -72,7 +78,9 @@ public class ApiRequests {
         if (!accessToken.equals("")) {
             final String payload = "{\"token\": \"" + token + "\", \"access_token\": \"" + accessToken + "\", \"active\": \"" + 1 + "\"}";
             try {
-                String response = client.post(url + "/deviceToken", payload);
+                BufferedReader reader = client.post(url + "/deviceToken", payload);
+                String response = readResponse(reader);
+
                 JSONObject json = new JSONObject(response);
                 if (json.has("success")) {
                     return true;
@@ -86,9 +94,9 @@ public class ApiRequests {
 
     public boolean verifyAccessToken(String accessToken) {
         try {
-            String response = client.get(url + "/verifyAccessToken?access_token=" + accessToken);
-            JSONObject json = new JSONObject(response);
-            if (json.has("success")) {
+            BufferedReader reader = client.get(url + "/verifyAccessToken?access_token=" + accessToken);
+            String response = readResponse(reader);
+            if (response.contains("success")) {
                 return true;
             }
         } catch (Exception e) {
@@ -99,7 +107,8 @@ public class ApiRequests {
 
     public boolean logout(String accessToken) {
         try {
-            String response = client.delete(url + "/auth?access_token=" + accessToken);
+            BufferedReader reader = client.delete(url + "/auth?access_token=" + accessToken);
+            String response = readResponse(reader);
             JSONObject json = new JSONObject(response);
             if (json.has("success")) {
                 return true;
@@ -113,7 +122,8 @@ public class ApiRequests {
     public boolean deactivateDeviceToken(String deviceToken, String accessToken) {
         final String payload = "{\"active\": " + 0 + ",\"access_token\": \"" + accessToken + "\"}";
         try {
-            String response = client.put(url + "/deviceToken/" + deviceToken, payload);
+            BufferedReader reader = client.put(url + "/deviceToken/" + deviceToken, payload);
+            String response = readResponse(reader);
             JSONObject json = new JSONObject(response);
             if (json.has("success")) {
                 return true;
@@ -124,12 +134,31 @@ public class ApiRequests {
         return false;
     }
 
+    private String readResponse(BufferedReader reader) {
+        StringBuilder response = new StringBuilder();
+        String line;
+        try {
+            Log.i(TAG, "Reading response.");
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            Log.i(TAG, "Received response:" + response.toString());
+
+        } catch (IOException e) {
+            Log.i(TAG, "There was an error reading data. Error message: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return response.toString();
+    }
+
     // samo privremeno za testiranje
     public JSONArray getLecturesForGroup(int groupId, SharedPreferences preferences) {
         String accessToken = preferences.getString("accessToken", "");
         String slug = preferences.getString("slug", "");
         try {
-            String response = client.get(url + "/" + slug + "/group/" + groupId + "?access_token=" + accessToken);
+            BufferedReader reader = client.get(url + "/" + slug + "/group/" + groupId + "?access_token=" + accessToken);
+            String response = readResponse(reader);
             JSONObject json = new JSONObject(response);
 
             JSONObject success = json.getJSONObject("success");
