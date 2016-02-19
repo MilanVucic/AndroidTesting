@@ -69,12 +69,13 @@ public class HTTPClient {
         return reader;
     }
 
-    public BufferedReader delete(String url) throws IOException {
-        Log.i(TAG, "Sending a delete request to URL: " + url);
+    public BufferedReader delete(String url, String json) throws IOException {
+        RequestBody body = RequestBody.create(JSON, json);
+        Log.i(TAG, "Sending a delete request with body:\n" + json + "\n to URL: " + url);
 
         Request request = new Request.Builder()
                 .url(url)
-                .delete()
+                .delete(body)
                 .build();
 
         Response response = client.newCall(request).execute();

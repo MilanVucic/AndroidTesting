@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -57,6 +58,8 @@ public class ApiRequests {
             JSONObject data = success.getJSONObject("data");
             JSONObject user = data.getJSONObject("user");
 
+            Log.i("USER: ", user.toString());
+
             int userId = user.getInt("id");
             String slug = user.getJSONObject("faculty").getString("slug");
 
@@ -85,7 +88,11 @@ public class ApiRequests {
                 if (json.has("success")) {
                     return true;
                 }
-            } catch (Exception e) {
+            } catch (JSONException e) {
+                Log.i(TAG, "JSONException occurred:" + e.getMessage());
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.i(TAG, "IOException occurred:" + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -99,15 +106,37 @@ public class ApiRequests {
             if (response.contains("success")) {
                 return true;
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return false;
     }
 
+    public JSONArray getAllGroups(String accessToken, SharedPreferences preferences) {
+        try {
+            String slug = preferences.getString("slug", "");
+
+            BufferedReader reader = client.get(url + "/" + slug + "/groups?access_token=" + accessToken);
+            String response = readResponse(reader);
+            if (response.contains("success")) {
+                JSONObject json = new JSONObject(response);
+                JSONObject success = json.getJSONObject("success");
+                JSONObject data = success.getJSONObject("data");
+                JSONArray groups = data.getJSONArray("groups");
+                return groups;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean logout(String accessToken) {
         try {
-            BufferedReader reader = client.delete(url + "/auth?access_token=" + accessToken);
+            String payload = "{\"access_token\": \"" + accessToken + "\"}";
+            BufferedReader reader = client.delete(url + "/auth", payload);
             String response = readResponse(reader);
             JSONObject json = new JSONObject(response);
             if (json.has("success")) {

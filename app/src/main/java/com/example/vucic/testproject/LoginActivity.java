@@ -11,6 +11,8 @@ import android.content.Loader;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -22,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -32,6 +35,10 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +69,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private boolean auth = false;
     private SharedPreferences preferences;
     String email, password;
+    String accessToken;
+    final ArrayList<String> groupNames = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +78,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         setContentView(R.layout.activity_login);
 
         preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
-        final String accessToken = preferences.getString("accessToken", "");
+        accessToken = preferences.getString("accessToken", "");
         final CountDownLatch latch = new CountDownLatch(1);
 
         if (!accessToken.equals("")) {
@@ -178,6 +187,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private void attemptLogin() {
 
+        if (!isNetworkAvailable()) {
+            internetUnavailable();
+            return;
+        }
         // Check if no view has focus:
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -357,6 +370,31 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         protected void onPostExecute(final Boolean success) {
             mAuthTask = null;
             showProgress(false);
+            accessToken = preferences.getString("accessToken", "");
+
+            Thread getAllGroupsThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        JSONArray groups = apiRequests.getAllGroups(accessToken, preferences);
+                        if (groups != null) {
+                            for (int i = 0; i < groups.length(); i++) {
+                                JSONObject jsonObject = groups.getJSONObject(i);
+                                String name = jsonObject.getString("name");
+                                groupNames.add(name);
+                            }
+                            for (String group: groupNames
+                                 ) {
+                                Log.i("GRUPA:", group);
+                            }
+                        } else Log.e("Error:", "Failed to fetch groups.");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            getAllGroupsThread.start();
+
 
             if (success) {
                 Intent intent = new Intent(LoginActivity.this, RegistrationIntentService.class);
@@ -376,6 +414,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = null;
             showProgress(false);
         }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return ((activeNetworkInfo != null) && activeNetworkInfo.isConnected());
+    }
+
+    private void internetUnavailable() {
+        Toast toast = Toast.makeText(this, "Check your internet connection", Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.TOP, 0, 150);
+
+        toast.show();
     }
 }
 

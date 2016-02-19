@@ -25,19 +25,16 @@ public class NavigationDrawerActivity extends AppCompatActivity
     private ApiRequests apiRequests = new ApiRequests();
     private Toolbar toolbar;
     private static final String TAG = "NavigationDrawer";
+    String email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_navigation_drawer);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //TODO: iz nekog razloga on ne pronadje ovaj textview i onda crashuje ceo app jer se poziva metoda setText na null. Email se lepo dohvata iz preferences-a; nije u njemu problem.
-//        TextView usernameTextView = (TextView) findViewById(R.id.usernameTextView);
-        String email;
         preferences = this.getSharedPreferences("stuff", Context.MODE_PRIVATE);
         Log.i("Email:", email = preferences.getString("email", ""));
 
-//        usernameTextView.setText(email);
         handleWeeklySchedule();
 
         setSupportActionBar(toolbar);
@@ -51,6 +48,15 @@ public class NavigationDrawerActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.getMenu().getItem(0).setChecked(true);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        TextView emailTextView = (TextView) findViewById(R.id.emailTextView);
+        emailTextView.setText(email);
+
+        return true;
     }
 
     @Override
@@ -132,6 +138,7 @@ public class NavigationDrawerActivity extends AppCompatActivity
         });
 
         logout.start();
+        finish();
         Log.i(TAG, "Logging out.");
     }
 
