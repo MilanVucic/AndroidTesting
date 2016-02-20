@@ -15,11 +15,15 @@
     </string>
     <string name="title_activity_main">MainActivity</string>
     <string name="logout">Logout</string>
-    <string name="sign_out">Sign out</string>
+    <string name="sign_out">Odjavi se</string>
     <string name="StudentInfo">Student Info</string>
     <string name="weeklySchedule">Nedeljni raspored</string>
     <string name="yearlyCalender">Godisnji kalendar</string>
-    <string name="notifications">Obavestenja</string>
+    <string name="notifications">Obaveštenja</string>
+    <string name="settings">Podešavanja</string>
+    <string name="pushNotifications">Push notifikacije</string>
+    <string name="off">Isklj.</string>
+    <string name="on">Uklj.</string>
 
     <string name="_09h">09h</string>
     <string name="_10h">10h</string>
@@ -41,6 +45,9 @@
     <string name="action_settings">Settings</string>
     <string name="placeholderUsername">android.studio@android.com</string>
     <string name="placeholderGroup">Grupa 101</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <!--<string name="gcm_defaultSenderId">0x7f060034</string>-->
 </resources>

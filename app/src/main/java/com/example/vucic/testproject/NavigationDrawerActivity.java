@@ -3,10 +3,10 @@ package com.example.vucic.testproject;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
+import android.support.v4.app.*;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,11 +15,10 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 
 public class NavigationDrawerActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, SettingsFragment.OnFragmentInteractionListener {
 
     private SharedPreferences preferences;
     private ApiRequests apiRequests = new ApiRequests();
@@ -54,7 +53,9 @@ public class NavigationDrawerActivity extends AppCompatActivity
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         TextView emailTextView = (TextView) findViewById(R.id.emailTextView);
-        emailTextView.setText(email);
+        //TODO: opet mrtvi null pointer exception za ovaj prokleti textView?!?!!?!?!?!?! jedno vreme je radilo i onda prestade
+        //TODO: kad sam dodao fragment.. ne kapiram leba mi
+//        emailTextView.setText(email);
 
         return true;
     }
@@ -80,20 +81,23 @@ public class NavigationDrawerActivity extends AppCompatActivity
             handleYearlyCalendar();
         } else if (id == R.id.nav_logout) {
             handleLogout();
-        }  else if (id == R.id.nav_notifications) {
+        } else if (id == R.id.nav_notifications) {
             handleNotifications();
-    }
+        } else if (id == R.id.nav_settings) {
+            handleSettings();
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-    private boolean logout(String accessToken, String deviceToken){
+
+    private boolean logout(String accessToken, String deviceToken) {
         apiRequests.deactivateDeviceToken(deviceToken, accessToken);
         return apiRequests.logout(accessToken);
     }
 
-    private void setPreferences(){
+    private void setPreferences() {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString("accessToken", "");
         editor.putString("slug", "");
@@ -101,29 +105,43 @@ public class NavigationDrawerActivity extends AppCompatActivity
         editor.apply();
     }
 
-    private void handleWeeklySchedule(){
+    private void handleWeeklySchedule() {
         //TODO: implement the method
-        Log.i(TAG, "Entering weekly schedule view." );
+        Log.i(TAG, "Entering weekly schedule view.");
 
         toolbar.setTitle(R.string.weeklySchedule);
     }
 
-    private void handleYearlyCalendar(){
+    private void handleYearlyCalendar() {
         //TODO: implement the method
-        Log.i(TAG, "Entering yearly calendar view." );
+        Log.i(TAG, "Entering yearly calendar view.");
 
         toolbar.setTitle(R.string.yearlyCalender);
     }
 
-    private void handleNotifications(){
+    private void handleNotifications() {
         //TODO: implement the method
-        Log.i(TAG, "Entering notifications view." );
+        Log.i(TAG, "Entering notifications view.");
 
         toolbar.setTitle(R.string.notifications);
     }
 
+    private void handleSettings() {
+        Log.i(TAG, "Entering settings view.");
 
-    private void handleLogout(){
+        Fragment fragment = new SettingsFragment();
+
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.content_navigation_drawer, fragment)
+                .commit();
+
+        toolbar.setTitle(R.string.settings);
+    }
+
+
+    private void handleLogout() {
         final Thread logout = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -143,4 +161,8 @@ public class NavigationDrawerActivity extends AppCompatActivity
     }
 
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
 }
