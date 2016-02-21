@@ -6,7 +6,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.*;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,6 +16,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 public class NavigationDrawerActivity extends AppCompatActivity
@@ -56,7 +59,6 @@ public class NavigationDrawerActivity extends AppCompatActivity
         //TODO: opet mrtvi null pointer exception za ovaj prokleti textView?!?!!?!?!?!?! jedno vreme je radilo i onda prestade
         //TODO: kad sam dodao fragment.. ne kapiram leba mi
 //        emailTextView.setText(email);
-
         return true;
     }
 

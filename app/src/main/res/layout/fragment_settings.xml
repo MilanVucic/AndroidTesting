@@ -31,8 +31,8 @@
                 android:layout_gravity="right"
                 android:textOff="@string/off"
                 android:textOn="@string/on"
-                android:enabled="true"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:checked="true" />
 
         </LinearLayout>
     </ScrollView>

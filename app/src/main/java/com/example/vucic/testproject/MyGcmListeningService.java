@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,7 +22,14 @@ public class MyGcmListeningService extends GcmListenerService {
         Log.d(TAG, "From: " + from);
         Log.d(TAG, "Message: " + message);
 
-        sendNotification(message);
+        SharedPreferences preferences = getSharedPreferences("stuff", Context.MODE_PRIVATE);
+        if(preferences.getBoolean("pushNotificationsEnabled", true)){
+            Log.i(TAG, "Push notification sent.");
+            sendNotification(message);
+        }
+        else {
+            Log.i(TAG, "Push notifications are disabled and the message is not sent.");
+        }
     }
 
     private void sendNotification(String message) {
