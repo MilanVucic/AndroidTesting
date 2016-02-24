@@ -16,7 +16,7 @@ public class ApiRequests {
 
     static HTTPClient client = new HTTPClient();
     static String url = "http://api.studentinfo.rs";
-    private static final String TAG = "ApiRequest";
+    private static final String TAG = ApiRequests.class.getSimpleName();;
 
     public boolean getAccessToken(String username, String password, SharedPreferences preferences) {
         final String payload = "{\"grant_type\": \"password\",\"client_id\": \"1\", \"client_secret\": \"secret\", \"username\": \"" + username + "\", \"password\": \"" + password + "\"}";

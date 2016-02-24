@@ -16,17 +16,17 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
-public class NavigationDrawerActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, SettingsFragment.OnFragmentInteractionListener {
+public class NavigationDrawerActivity extends AppCompatActivity {
 
     private SharedPreferences preferences;
     private ApiRequests apiRequests = new ApiRequests();
     private Toolbar toolbar;
-    private static final String TAG = "NavigationDrawer";
+    private static final String TAG = NavigationDrawerActivity.class.getSimpleName();
     String email;
 
     @Override
@@ -48,17 +48,38 @@ public class NavigationDrawerActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem item) {
+                int id = item.getItemId();
+
+                if (id == R.id.nav_weekly_schedule) {
+                    handleWeeklySchedule();
+                } else if (id == R.id.nav_yearly_calendar) {
+                    handleYearlyCalendar();
+                } else if (id == R.id.nav_logout) {
+                    handleLogout();
+                } else if (id == R.id.nav_notifications) {
+                    handleNotifications();
+                } else if (id == R.id.nav_settings) {
+                    handleSettings();
+                }
+
+                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                drawer.closeDrawer(GravityCompat.START);
+                return true;
+            }
+        });
         navigationView.getMenu().getItem(0).setChecked(true);
+
+        View v = navigationView.getHeaderView(0);
+        TextView emailTextView = (TextView) v.findViewById(R.id.emailTextView);
+        emailTextView.setText(email);
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        TextView emailTextView = (TextView) findViewById(R.id.emailTextView);
-        //TODO: opet mrtvi null pointer exception za ovaj prokleti textView?!?!!?!?!?!?! jedno vreme je radilo i onda prestade
-        //TODO: kad sam dodao fragment.. ne kapiram leba mi
-//        emailTextView.setText(email);
         return true;
     }
 
@@ -70,28 +91,6 @@ public class NavigationDrawerActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_weekly_schedule) {
-            handleWeeklySchedule();
-        } else if (id == R.id.nav_yearly_calendar) {
-            handleYearlyCalendar();
-        } else if (id == R.id.nav_logout) {
-            handleLogout();
-        } else if (id == R.id.nav_notifications) {
-            handleNotifications();
-        } else if (id == R.id.nav_settings) {
-            handleSettings();
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     private boolean logout(String accessToken, String deviceToken) {
@@ -131,7 +130,7 @@ public class NavigationDrawerActivity extends AppCompatActivity
     private void handleSettings() {
         Log.i(TAG, "Entering settings view.");
 
-        Fragment fragment = new SettingsFragment();
+        Fragment fragment = SettingsFragment.newInstance();
 
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -160,11 +159,5 @@ public class NavigationDrawerActivity extends AppCompatActivity
         logout.start();
         finish();
         Log.i(TAG, "Logging out.");
-    }
-
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
     }
 }

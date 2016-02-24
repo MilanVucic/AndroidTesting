@@ -15,18 +15,12 @@ import android.widget.Switch;
 
 public class SettingsFragment extends Fragment {
 
-    private static final String TAG = "SettingsFragment";
+    private static final String TAG = SettingsFragment.class.getSimpleName();;
     private SharedPreferences preferences;
     private Switch notificationsSwitch;
     private boolean pushNotificationsEnabled;
 
-    private OnFragmentInteractionListener mListener;
-
-    public SettingsFragment() {
-        // Required empty public constructor
-    }
-
-    public static SettingsFragment newInstance(String param1, String param2) {
+    public static SettingsFragment newInstance() {
         SettingsFragment fragment = new SettingsFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
@@ -60,18 +54,11 @@ public class SettingsFragment extends Fragment {
         Log.i(TAG, "is attached to the activity.");
         preferences = context.getSharedPreferences("stuff", Context.MODE_PRIVATE);
         pushNotificationsEnabled = preferences.getBoolean("pushNotificationsEnabled", true);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
     private void enableNotifications() {
@@ -88,9 +75,5 @@ public class SettingsFragment extends Fragment {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("pushNotificationsEnabled", false);
         editor.apply();
-    }
-
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri uri);
     }
 }
